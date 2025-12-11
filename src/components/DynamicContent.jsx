@@ -1,44 +1,67 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '../supabaseClient';
 
 const DynamicContent = () => {
   const [dynamicContent, setDynamicContent] = useState('');
 
   useEffect(() => {
-    // Load content from localStorage on load
-    const loadContent = () => {
-      const saved = localStorage.getItem('admin_settings');
-      if (saved) {
-        const data = JSON.parse(saved);
-        const content = data.content?.trim() || '';
-        setDynamicContent(content);
-      } else {
-        setDynamicContent('');
+    // Load content from Supabase on load
+    const loadContent = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('tiktok_website')
+          .select('content')
+          .eq('id', 1)
+          .single();
+
+        if (error) {
+          console.error('Error loading content from Supabase:', error);
+          return;
+        }
+
+        if (data) {
+          const content = data.content?.trim() || '';
+          setDynamicContent(content);
+        }
+      } catch (error) {
+        console.error('Error loading content:', error);
       }
     };
     loadContent();
 
-    // Listen for admin panel updates
+    // Subscribe to real-time changes from Supabase
+    const subscription = supabase
+      .channel('tiktok_website_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'tiktok_website',
+          filter: 'id=eq.1'
+        },
+        (payload) => {
+          console.log('Real-time update received:', payload);
+          if (payload.new && payload.new.content !== undefined) {
+            const content = payload.new.content?.trim() || '';
+            setDynamicContent(content);
+          }
+        }
+      )
+      .subscribe();
+
+    // Keep custom event listener for backward compatibility during migration
     const onContentUpdated = (e) => {
       const content = e.detail.content?.trim() || '';
       setDynamicContent(content);
     };
     window.addEventListener('contentUpdated', onContentUpdated);
 
-    // Also handle settingsUpdated for compatibility with new editor
-    const onSettingsUpdated = (e) => {
-      const content = e.detail?.content?.trim?.() || e.detail?.content || '';
-      setDynamicContent(content);
-    };
-    window.addEventListener('settingsUpdated', onSettingsUpdated);
-
-    // Also listen for localStorage changes (cross-tab)
-    window.addEventListener('storage', loadContent);
-
     return () => {
+      // Cleanup Supabase subscription
+      subscription.unsubscribe();
       window.removeEventListener('contentUpdated', onContentUpdated);
-      window.removeEventListener('settingsUpdated', onSettingsUpdated);
-      window.removeEventListener('storage', loadContent);
     };
   }, []);
 

@@ -5,6 +5,7 @@ import 'froala-editor/css/froala_editor.pkgd.min.css';
 import 'froala-editor/js/plugins.pkgd.min.js';
 import 'font-awesome/css/font-awesome.css';
 import 'froala-editor/js/third_party/font_awesome.min.js';
+import { supabase } from '../supabaseClient';
 import './ContentEditor.css';
 
 const froalaConfig = {
@@ -30,25 +31,23 @@ const FroalaContentManagement = () => {
 
 	const loadContent = async () => {
 		try {
-			const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
-			const isDevelopment = process.env.NODE_ENV === 'development';
-			
-			if (!isDevelopment || process.env.REACT_APP_API_URL) {
-				const response = await fetch(`${API_BASE_URL}/api/settings`);
-				if (response.ok) {
-					const data = await response.json();
-					setContent(data.content || '');
-					return;
-				}
+			// Load from Supabase
+			const { data, error } = await supabase
+				.from('tiktok_website')
+				.select('content')
+				.eq('id', 1)
+				.single();
+
+			if (error) {
+				console.error('Error loading content from Supabase:', error);
+				return;
 			}
-			
-			const savedSettings = localStorage.getItem('admin_settings');
-			if (savedSettings) {
-				const data = JSON.parse(savedSettings);
+
+			if (data) {
 				setContent(data.content || '');
 			}
 		} catch (err) {
-			console.warn('Error loading content:', err);
+			console.error('Error loading content:', err);
 		}
 	};
 
@@ -58,36 +57,32 @@ const FroalaContentManagement = () => {
 		setSuccess(null);
 
 		try {
-			const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
-			const isDevelopment = process.env.NODE_ENV === 'development';
-			
-			const settingsData = {
-				maintenance: false,
-				title: 'PixelArt Converter',
-				content: content
-			};
+			// Save to Supabase
+			const { error: saveError } = await supabase
+				.from('tiktok_website')
+				.upsert(
+					{ id: 1, content: content, updated_at: new Date().toISOString() },
+					{ onConflict: 'id' }
+				);
 
-			if (!isDevelopment || process.env.REACT_APP_API_URL) {
-				const response = await fetch(`${API_BASE_URL}/api/settings`, {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify(settingsData)
-				});
-
-				if (response.ok) {
-					setSuccess('Content saved successfully!');
-					localStorage.setItem('admin_settings', JSON.stringify(settingsData));
-					window.dispatchEvent(new CustomEvent('settingsUpdated', { detail: settingsData }));
-					window.dispatchEvent(new CustomEvent('contentUpdated', { detail: { content } }));
-				} else {
-					throw new Error('Failed to save content');
-				}
-			} else {
-				localStorage.setItem('admin_settings', JSON.stringify(settingsData));
-				setSuccess('Content saved to localStorage!');
-				window.dispatchEvent(new CustomEvent('settingsUpdated', { detail: settingsData }));
-				window.dispatchEvent(new CustomEvent('contentUpdated', { detail: { content } }));
+			if (saveError) {
+				throw new Error(saveError.message);
 			}
+
+			// Dispatch custom event for real-time updates (backward compatibility)
+			window.dispatchEvent(new CustomEvent('settingsUpdated', {
+				detail: { content: content }
+			}));
+			window.dispatchEvent(new CustomEvent('contentUpdated', {
+				detail: { content: content }
+			}));
+
+			setSuccess('Content saved successfully to Supabase!');
+
+			// Clear success message after 3 seconds
+			setTimeout(() => {
+				setSuccess(null);
+			}, 3000);
 		} catch (err) {
 			setError('Error saving content: ' + err.message);
 		} finally {

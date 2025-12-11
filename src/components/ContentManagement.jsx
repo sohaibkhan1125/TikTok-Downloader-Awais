@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { CKEditor, useCKEditorCloud } from '@ckeditor/ckeditor5-react';
 import { motion } from 'framer-motion';
+import { supabase } from '../supabaseClient';
 import './ContentEditor.css';
 
 const LICENSE_KEY = 'eyJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3NjIzMDA3OTksImp0aSI6Ijg5OTk2NDRlLWM5MWItNGI0Ny1iOGY1LWYwMzI0ZmU0ZjkzZiIsInVzYWdlRW5kcG9pbnQiOiJodHRwczovL3Byb3h5LWV2ZW50LmNrZWRpdG9yLmNvbSIsImRpc3RyaWJ1dGlvbkNoYW5uZWwiOlsiY2xvdWQiLCJkcnVwYWwiLCJzaCJdLCJ3aGl0ZUxhYmVsIjp0cnVlLCJsaWNlbnNlVHlwZSI6InRyaWFsIiwiZmVhdHVyZXMiOlsiKiJdLCJ2YyI6ImE0NTdiOWRkIn0.EI5vY46uDveiNZxbkgi0kV8okb4d9DozALvcriPRxAYffnTu9l37kGtpf4yOFKk44ZJcgh0Tqm43ntw9D6_Naw';
@@ -23,14 +24,23 @@ const ContentManagement = () => {
 
 	const loadContent = async () => {
 		try {
-			// Load from localStorage
-			const savedSettings = localStorage.getItem('admin_settings');
-			if (savedSettings) {
-				const data = JSON.parse(savedSettings);
+			// Load from Supabase
+			const { data, error } = await supabase
+				.from('tiktok_website')
+				.select('content')
+				.eq('id', 1)
+				.single();
+
+			if (error) {
+				console.error('Error loading content from Supabase:', error);
+				return;
+			}
+
+			if (data) {
 				setContent(data.content || '');
 			}
 		} catch (error) {
-			console.warn('Error loading content:', error);
+			console.error('Error loading content:', error);
 		}
 	};
 
@@ -40,27 +50,25 @@ const ContentManagement = () => {
 		setSuccess(null);
 
 		try {
-			// Get existing settings from localStorage
-			const existingSettings = localStorage.getItem('admin_settings');
-			let settingsData = {};
-			
-			if (existingSettings) {
-				settingsData = JSON.parse(existingSettings);
+			// Save to Supabase
+			const { error: saveError } = await supabase
+				.from('tiktok_website')
+				.upsert(
+					{ id: 1, content: content, updated_at: new Date().toISOString() },
+					{ onConflict: 'id' }
+				);
+
+			if (saveError) {
+				throw new Error(saveError.message);
 			}
 
-			// Update content in settings
-			settingsData.content = content;
-
-			// Save to localStorage
-			localStorage.setItem('admin_settings', JSON.stringify(settingsData));
-			
-			// Dispatch custom event for real-time updates
-			window.dispatchEvent(new CustomEvent('contentUpdated', { 
-				detail: { content: content } 
+			// Dispatch custom event for real-time updates (backward compatibility)
+			window.dispatchEvent(new CustomEvent('contentUpdated', {
+				detail: { content: content }
 			}));
 
-			setSuccess('Content saved successfully!');
-			
+			setSuccess('Content saved successfully to Supabase!');
+
 			// Clear success message after 3 seconds
 			setTimeout(() => {
 				setSuccess(null);
@@ -413,20 +421,20 @@ const ContentManagement = () => {
 		};
 	}, [cloud, isLayoutReady, content]);
 
-  return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="bg-white rounded-lg shadow-lg p-4 lg:p-6"
-    >
-      <div className="mb-4 lg:mb-6">
-        <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">Edit Website Content (Above FAQs)</h2>
-        <p className="text-sm lg:text-base text-gray-600">Create and manage content that will be displayed above the FAQ section on your website.</p>
-      </div>
+	return (
+		<motion.div
+			initial={{ opacity: 0, y: 20 }}
+			animate={{ opacity: 1, y: 0 }}
+			transition={{ duration: 0.5 }}
+			className="bg-white rounded-lg shadow-lg p-4 lg:p-6"
+		>
+			<div className="mb-4 lg:mb-6">
+				<h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">Edit Website Content (Above FAQs)</h2>
+				<p className="text-sm lg:text-base text-gray-600">Create and manage content that will be displayed above the FAQ section on your website.</p>
+			</div>
 
 			{success && (
-				<motion.div 
+				<motion.div
 					initial={{ opacity: 0, scale: 0.95 }}
 					animate={{ opacity: 1, scale: 1 }}
 					className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg"
@@ -436,7 +444,7 @@ const ContentManagement = () => {
 			)}
 
 			{error && (
-				<motion.div 
+				<motion.div
 					initial={{ opacity: 0, scale: 0.95 }}
 					animate={{ opacity: 1, scale: 1 }}
 					className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg"
@@ -453,8 +461,8 @@ const ContentManagement = () => {
 					<div className="editor-container__editor">
 						<div ref={editorRef}>
 							{ClassicEditor && editorConfig && (
-								<CKEditor 
-									editor={ClassicEditor} 
+								<CKEditor
+									editor={ClassicEditor}
 									config={editorConfig}
 									data={content}
 									onChange={(event, editor) => {
