@@ -14,6 +14,7 @@ import MaintenanceOverlay from './components/MaintenanceOverlay';
 import Login from './pages/admin/Login';
 import Signup from './pages/admin/Signup';
 import Dashboard from './pages/admin/Dashboard';
+import SEO from './components/SEO';
 
 // Main TikTok Downloader Component
 const TikTokDownloader = () => {
@@ -37,17 +38,17 @@ const TikTokDownloader = () => {
           }
         }
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
+
       if (data.error) {
         throw new Error(data.error);
       }
-      
+
       setVideoData(data);
     } catch (err) {
       console.error('Download error:', err);
@@ -59,6 +60,11 @@ const TikTokDownloader = () => {
 
   return (
     <div className="App">
+      <SEO
+        title="TikSaver - Download TikTok Videos Without Watermark | Free HD TikTok Downloader 2025"
+        description="Download TikTok videos without watermark in HD quality (720p, 480p, 360p) and MP3 audio. Fast, secure, and completely free TikTok video downloader."
+        canonical="/"
+      />
       <MaintenanceOverlay />
       <Header />
       <Hero onDownload={handleDownload} isLoading={isLoading} />
@@ -81,18 +87,18 @@ function App() {
           <Routes>
             {/* Main TikTok Downloader Routes */}
             <Route path="/" element={<TikTokDownloader />} />
-            
+
             {/* Admin Routes */}
             <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
             <Route path="/admin/login" element={<Login />} />
             <Route path="/admin/signup" element={<Signup />} />
-            <Route 
-              path="/admin/dashboard" 
+            <Route
+              path="/admin/dashboard"
               element={
                 <ProtectedRoute>
                   <Dashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
           </Routes>
         </Router>

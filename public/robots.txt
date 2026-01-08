@@ -1,3 +1,6 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow:
+Disallow: /admin
+Disallow: /admin/
+
+Sitemap: https://tiksaver.com/sitemap.xml

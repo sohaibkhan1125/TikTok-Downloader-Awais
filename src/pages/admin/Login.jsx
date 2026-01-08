@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import FormInput from '../../components/FormInput';
 import Loader from '../../components/Loader';
+import SEO from '../../components/SEO';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -56,7 +57,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setLoading(true);
@@ -64,7 +65,7 @@ const Login = () => {
 
     try {
       const result = await login(formData.email, formData.password);
-      
+
       if (result.success) {
         navigate(from, { replace: true });
       } else {
@@ -79,7 +80,7 @@ const Login = () => {
 
   const handleForgotPassword = async (e) => {
     e.preventDefault();
-    
+
     if (!forgotPasswordEmail) {
       setMessage('Please enter your email address');
       return;
@@ -90,7 +91,7 @@ const Login = () => {
 
     try {
       const result = await resetPassword(forgotPasswordEmail);
-      
+
       if (result.success) {
         setMessage('Password reset email sent! Check your inbox.');
         setShowForgotPassword(false);
@@ -107,6 +108,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
+      <SEO title="Admin Login | TikSaver" noindex />
       <div className="max-w-md w-full space-y-6 lg:space-y-8">
         {/* Header */}
         <div className="text-center">
@@ -162,11 +164,10 @@ const Login = () => {
               </div>
 
               {message && (
-                <div className={`p-4 rounded-lg ${
-                  message.includes('sent') || message.includes('success') 
-                    ? 'bg-green-50 text-green-800 border border-green-200' 
-                    : 'bg-red-50 text-red-800 border border-red-200'
-                }`}>
+                <div className={`p-4 rounded-lg ${message.includes('sent') || message.includes('success')
+                  ? 'bg-green-50 text-green-800 border border-green-200'
+                  : 'bg-red-50 text-red-800 border border-red-200'
+                  }`}>
                   {message}
                 </div>
               )}
@@ -208,11 +209,10 @@ const Login = () => {
               />
 
               {message && (
-                <div className={`p-4 rounded-lg ${
-                  message.includes('sent') || message.includes('success') 
-                    ? 'bg-green-50 text-green-800 border border-green-200' 
-                    : 'bg-red-50 text-red-800 border border-red-200'
-                }`}>
+                <div className={`p-4 rounded-lg ${message.includes('sent') || message.includes('success')
+                  ? 'bg-green-50 text-green-800 border border-green-200'
+                  : 'bg-red-50 text-red-800 border border-red-200'
+                  }`}>
                   {message}
                 </div>
               )}
@@ -251,8 +251,8 @@ const Login = () => {
           <div className="text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{' '}
-              <Link 
-                to="/admin/signup" 
+              <Link
+                to="/admin/signup"
                 className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200"
               >
                 Sign up here
@@ -263,8 +263,8 @@ const Login = () => {
 
         {/* Back to Main Site */}
         <div className="text-center">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="text-sm text-gray-500 hover:text-gray-700 transition-colors duration-200"
           >
             ← Back to TikSaver

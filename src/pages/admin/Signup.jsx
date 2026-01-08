@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import FormInput from '../../components/FormInput';
 import Loader from '../../components/Loader';
+import SEO from '../../components/SEO';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -66,7 +67,7 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setLoading(true);
@@ -74,7 +75,7 @@ const Signup = () => {
 
     try {
       const result = await signup(formData.email, formData.password);
-      
+
       if (result.success) {
         setMessage('Account created successfully! Please check your email for verification link before signing in.');
         // Clear form
@@ -100,6 +101,7 @@ const Signup = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
+      <SEO title="Admin Signup | TikSaver" noindex />
       <div className="max-w-md w-full space-y-6 lg:space-y-8">
         {/* Header */}
         <div className="text-center">
@@ -168,11 +170,10 @@ const Signup = () => {
             />
 
             {message && (
-              <div className={`p-4 rounded-lg ${
-                message.includes('successfully') || message.includes('verification') 
-                  ? 'bg-green-50 text-green-800 border border-green-200' 
-                  : 'bg-red-50 text-red-800 border border-red-200'
-              }`}>
+              <div className={`p-4 rounded-lg ${message.includes('successfully') || message.includes('verification')
+                ? 'bg-green-50 text-green-800 border border-green-200'
+                : 'bg-red-50 text-red-800 border border-red-200'
+                }`}>
                 <div className="flex items-start">
                   <div className="flex-shrink-0">
                     {message.includes('successfully') || message.includes('verification') ? (
@@ -219,8 +220,8 @@ const Signup = () => {
           <div className="text-center">
             <p className="text-sm text-gray-600">
               Already have an account?{' '}
-              <Link 
-                to="/admin/login" 
+              <Link
+                to="/admin/login"
                 className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200"
               >
                 Sign in here
@@ -231,8 +232,8 @@ const Signup = () => {
 
         {/* Back to Main Site */}
         <div className="text-center">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="text-sm text-gray-500 hover:text-gray-700 transition-colors duration-200"
           >
             ← Back to TikSaver
