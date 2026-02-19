@@ -25,6 +25,89 @@ const QuillEditor = () => {
     const [saving, setSaving] = useState(false);
     const imageInputRef = useRef(null);
 
+    const triggerToast = (msg, type = 'success') => {
+        setToastMessage(msg);
+        setToastType(type);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+    };
+
+    const updateStats = () => {
+        if (!quillRef.current) return;
+        const text = quillRef.current.getText();
+        const words = text.trim().length === 0 ? 0 : text.trim().split(/\s+/).length;
+        const chars = text.length > 1 ? text.length - 1 : 0;
+        setWordCount(words);
+        setCharCount(chars);
+    };
+
+    const loadSettings = () => {
+        const theme = localStorage.getItem(THEME_KEY);
+        if (theme === 'dark') {
+            setIsDarkMode(true);
+            document.body.classList.add('dark-mode');
+        }
+    };
+
+    const loadContent = useCallback(async () => {
+        try {
+            // First load from Supabase as per requirements to sync across devices
+            const { data } = await supabase
+                .from('tiktok_website')
+                .select('content')
+                .eq('id', 1)
+                .single();
+
+            if (data && data.content) {
+                quillRef.current.root.innerHTML = data.content;
+            } else {
+                // Fallback to local storage if needed, or just keep empty
+                const saved = localStorage.getItem(EDITOR_KEY);
+                if (saved) {
+                    quillRef.current.root.innerHTML = saved;
+                }
+            }
+            updateStats();
+        } catch (error) {
+            console.error('Error loading content:', error);
+            // Fallback to local storage
+            const saved = localStorage.getItem(EDITOR_KEY);
+            if (saved) {
+                quillRef.current.root.innerHTML = saved;
+                updateStats();
+            }
+        }
+    }, []);
+
+    const imageHandler = () => {
+        imageInputRef.current.click();
+    };
+
+    const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (file && /^image\//.test(file.type)) {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => {
+                const range = quillRef.current.getSelection();
+                quillRef.current.insertEmbed(range.index, 'image', reader.result);
+                quillRef.current.setSelection(range.index + 1);
+                triggerToast('Image inserted successfully');
+            };
+        } else {
+            triggerToast('Please select a valid image file', 'error');
+        }
+    };
+
+    const localAutoSave = () => {
+        if (!quillRef.current) return;
+        const content = quillRef.current.root.innerHTML;
+        localStorage.setItem(EDITOR_KEY, content);
+        const now = new Date();
+        const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        setLastSaved(`Autosaved locally at ${timeString}`);
+    };
+
     useEffect(() => {
         // Init Quill
         if (quillRef.current) return; // Already initialized
@@ -80,82 +163,6 @@ const QuillEditor = () => {
         return () => clearInterval(autoSaveInterval);
     }, [loadContent]);
 
-    const imageHandler = () => {
-        imageInputRef.current.click();
-    };
-
-    const handleImageUpload = (e) => {
-        const file = e.target.files[0];
-        if (file && /^image\//.test(file.type)) {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => {
-                const range = quillRef.current.getSelection();
-                quillRef.current.insertEmbed(range.index, 'image', reader.result);
-                quillRef.current.setSelection(range.index + 1);
-                triggerToast('Image inserted successfully');
-            };
-        } else {
-            triggerToast('Please select a valid image file', 'error');
-        }
-    };
-
-    const updateStats = () => {
-        if (!quillRef.current) return;
-        const text = quillRef.current.getText();
-        const words = text.trim().length === 0 ? 0 : text.trim().split(/\s+/).length;
-        const chars = text.length > 1 ? text.length - 1 : 0;
-        setWordCount(words);
-        setCharCount(chars);
-    };
-
-    const loadSettings = () => {
-        const theme = localStorage.getItem(THEME_KEY);
-        if (theme === 'dark') {
-            setIsDarkMode(true);
-            document.body.classList.add('dark-mode');
-        }
-    };
-
-    const loadContent = useCallback(async () => {
-        try {
-            // First load from Supabase as per requirements to sync across devices
-            const { data } = await supabase
-                .from('tiktok_website')
-                .select('content')
-                .eq('id', 1)
-                .single();
-
-            if (data && data.content) {
-                quillRef.current.root.innerHTML = data.content;
-            } else {
-                // Fallback to local storage if needed, or just keep empty
-                const saved = localStorage.getItem(EDITOR_KEY);
-                if (saved) {
-                    quillRef.current.root.innerHTML = saved;
-                }
-            }
-            updateStats();
-        } catch (error) {
-            console.error('Error loading content:', error);
-            // Fallback to local storage
-            const saved = localStorage.getItem(EDITOR_KEY);
-            if (saved) {
-                quillRef.current.root.innerHTML = saved;
-                updateStats();
-            }
-        }
-    }, []);
-
-    const localAutoSave = () => {
-        if (!quillRef.current) return;
-        const content = quillRef.current.root.innerHTML;
-        localStorage.setItem(EDITOR_KEY, content);
-        const now = new Date();
-        const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        setLastSaved(`Autosaved locally at ${timeString}`);
-    };
-
     const saveContent = async () => {
         if (!quillRef.current) return;
         setSaving(true);
@@ -202,12 +209,7 @@ const QuillEditor = () => {
         }
     };
 
-    const triggerToast = (msg, type = 'success') => {
-        setToastMessage(msg);
-        setToastType(type);
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000);
-    };
+
 
     const toggleTheme = () => {
         const newMode = !isDarkMode;
