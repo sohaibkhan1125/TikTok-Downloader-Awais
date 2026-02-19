@@ -56,7 +56,7 @@ const Footer = () => {
               </h3>
             </div>
             <p className="text-gray-300 mb-6 leading-relaxed">
-              Download TikTok videos in HD and MP3 without watermark. Fast, secure, and completely free to use. 
+              Download TikTok videos in HD and MP3 without watermark. Fast, secure, and completely free to use.
               No registration required.
             </p>
             <div className="flex space-x-4">
@@ -116,22 +116,22 @@ const Footer = () => {
             <h4 className="text-lg font-semibold mb-4">Legal</h4>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors duration-300">
+                <a href="/privacy-policy" className="text-gray-300 hover:text-white transition-colors duration-300">
                   Privacy Policy
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors duration-300">
+                <a href="/terms-of-service" className="text-gray-300 hover:text-white transition-colors duration-300">
                   Terms of Service
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors duration-300">
+                <a href="/dmca" className="text-gray-300 hover:text-white transition-colors duration-300">
                   DMCA
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors duration-300">
+                <a href="/disclaimer" className="text-gray-300 hover:text-white transition-colors duration-300">
                   Disclaimer
                 </a>
               </li>

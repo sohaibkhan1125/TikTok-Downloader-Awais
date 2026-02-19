@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Quill from 'quill';
 import 'quill/dist/quill.snow.css';
-import Prism from 'prismjs';
 import './PrismTheme.css'; // Local file for theme
 import { supabase } from '../supabaseClient';
 import './QuillEditor.css';
@@ -79,7 +78,7 @@ const QuillEditor = () => {
         }, 30000);
 
         return () => clearInterval(autoSaveInterval);
-    }, []);
+    }, [loadContent]);
 
     const imageHandler = () => {
         imageInputRef.current.click();
@@ -118,10 +117,10 @@ const QuillEditor = () => {
         }
     };
 
-    const loadContent = async () => {
+    const loadContent = useCallback(async () => {
         try {
             // First load from Supabase as per requirements to sync across devices
-            const { data, error } = await supabase
+            const { data } = await supabase
                 .from('tiktok_website')
                 .select('content')
                 .eq('id', 1)
@@ -146,7 +145,7 @@ const QuillEditor = () => {
                 updateStats();
             }
         }
-    };
+    }, []);
 
     const localAutoSave = () => {
         if (!quillRef.current) return;
@@ -237,7 +236,7 @@ const QuillEditor = () => {
                 indent = indent.substring(tab.length);
             }
             formatted += indent + '<' + element + '>\r\n';
-            if (element.match(/^<?\w[^>]*[^\/]$/) && !element.startsWith("input") && !element.startsWith("img") && !element.startsWith("br")) {
+            if (element.match(/^<?\w[^>]*[^/]$/) && !element.startsWith("input") && !element.startsWith("img") && !element.startsWith("br")) {
                 indent += tab;
             }
         });
