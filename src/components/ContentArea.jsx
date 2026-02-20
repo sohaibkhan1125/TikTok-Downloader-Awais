@@ -4,6 +4,7 @@ import LogoTitleManagement from './LogoTitleManagement';
 import FooterManagement from './FooterManagement';
 import QuillEditor from './QuillEditor';
 import HeroSectionManagement from './HeroSectionManagement';
+import BlogManagement from './BlogManagement';
 
 const ContentArea = ({ activeMenu }) => {
   const [activeSubMenu, setActiveSubMenu] = useState('maintenance');
@@ -19,8 +20,8 @@ const ContentArea = ({ activeMenu }) => {
                 <button
                   onClick={() => setActiveSubMenu('maintenance')}
                   className={`flex-1 px-3 lg:px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${activeSubMenu === 'maintenance'
-                      ? 'bg-white text-blue-700 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-white text-blue-700 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
                     }`}
                 >
                   <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -33,8 +34,8 @@ const ContentArea = ({ activeMenu }) => {
                 <button
                   onClick={() => setActiveSubMenu('logo-title')}
                   className={`flex-1 px-3 lg:px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${activeSubMenu === 'logo-title'
-                      ? 'bg-white text-blue-700 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-white text-blue-700 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
                     }`}
                 >
                   <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,6 +58,8 @@ const ContentArea = ({ activeMenu }) => {
         return <QuillEditor />;
       case 'hero':
         return <HeroSectionManagement />;
+      case 'blogs':
+        return <BlogManagement />;
       default:
         return (
           <div className="flex items-center justify-center h-64">
@@ -83,7 +86,8 @@ const ContentArea = ({ activeMenu }) => {
               activeMenu === 'footer' ? 'Footer Management' :
                 activeMenu === 'content' ? 'Content Management' :
                   activeMenu === 'hero' ? 'Hero Section Management' :
-                    'Dashboard'}
+                    activeMenu === 'blogs' ? 'Blog Management' :
+                      'Dashboard'}
           </h2>
           <p className="text-sm lg:text-base text-gray-600">
             {activeMenu === 'general'
@@ -94,7 +98,9 @@ const ContentArea = ({ activeMenu }) => {
                   ? 'Edit website content above FAQ section'
                   : activeMenu === 'hero'
                     ? 'Update hero section heading and description with live preview'
-                    : 'Welcome to the admin dashboard'
+                    : activeMenu === 'blogs'
+                      ? 'Create, edit and publish blog posts'
+                      : 'Welcome to the admin dashboard'
             }
           </p>
         </div>

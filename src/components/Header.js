@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getSetting } from '../utils/localStorageHelper';
 
 const Header = () => {
@@ -68,6 +69,9 @@ const Header = () => {
             <a href="#faq" className="text-gray-700 hover:text-pink-600 transition-colors duration-300">
               FAQ
             </a>
+            <Link to="/blog" className="text-gray-700 hover:text-pink-600 transition-colors duration-300">
+              Blog
+            </Link>
             <a href="#contact" className="text-gray-700 hover:text-pink-600 transition-colors duration-300">
               Contact
             </a>
@@ -108,13 +112,19 @@ const Header = () => {
               >
                 How to Use
               </a>
-              <a
-                href="#faq"
+              <a href="#faq"
                 className="block px-3 py-2 text-gray-700 hover:text-pink-600 transition-colors duration-300"
                 onClick={() => setIsMenuOpen(false)}
               >
                 FAQ
               </a>
+              <Link
+                to="/blog"
+                className="block px-3 py-2 text-gray-700 hover:text-pink-600 transition-colors duration-300"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Blog
+              </Link>
               <a
                 href="#contact"
                 className="block px-3 py-2 text-gray-700 hover:text-pink-600 transition-colors duration-300"

@@ -33,7 +33,7 @@ const Sidebar = ({ activeMenu, setActiveMenu }) => {
       ),
       description: 'Edit website content above FAQ section'
     }
-    ,{
+    , {
       id: 'hero',
       label: 'Hero Section Management',
       icon: (
@@ -42,6 +42,18 @@ const Sidebar = ({ activeMenu, setActiveMenu }) => {
         </svg>
       ),
       description: 'Update hero heading and description'
+    },
+    {
+      id: 'blogs',
+      label: 'Blog Management',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l4 4v10a2 2 0 01-2 2z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 2v4a2 2 0 002 2h4" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h3M7 12h8M7 16h8" />
+        </svg>
+      ),
+      description: 'Create, edit and manage blog posts'
     }
   ];
 
@@ -52,7 +64,7 @@ const Sidebar = ({ activeMenu, setActiveMenu }) => {
         <h2 className="text-lg font-semibold text-gray-900">Admin Panel</h2>
         <p className="text-sm text-gray-600">Manage your settings</p>
       </div>
-      
+
       <div className="hidden lg:block mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-2">Admin Panel</h2>
         <p className="text-sm text-gray-600">Manage your TikTok downloader settings</p>
@@ -63,26 +75,22 @@ const Sidebar = ({ activeMenu, setActiveMenu }) => {
           <button
             key={item.id}
             onClick={() => setActiveMenu(item.id)}
-            className={`w-full flex items-center space-x-3 px-3 lg:px-4 py-3 rounded-lg text-left transition-all duration-200 ease-out transform hover:-translate-y-0.5 ${
-              activeMenu === item.id
+            className={`w-full flex items-center space-x-3 px-3 lg:px-4 py-3 rounded-lg text-left transition-all duration-200 ease-out transform hover:-translate-y-0.5 ${activeMenu === item.id
                 ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
                 : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-            }`}
+              }`}
           >
-            <div className={`flex-shrink-0 ${
-              activeMenu === item.id ? 'text-blue-600' : 'text-gray-400'
-            }`}>
+            <div className={`flex-shrink-0 ${activeMenu === item.id ? 'text-blue-600' : 'text-gray-400'
+              }`}>
               {item.icon}
             </div>
             <div className="flex-1 min-w-0">
-              <p className={`text-sm font-medium ${
-                activeMenu === item.id ? 'text-blue-700' : 'text-gray-900'
-              }`}>
+              <p className={`text-sm font-medium ${activeMenu === item.id ? 'text-blue-700' : 'text-gray-900'
+                }`}>
                 {item.label}
               </p>
-              <p className={`text-xs hidden sm:block ${
-                activeMenu === item.id ? 'text-blue-600' : 'text-gray-500'
-              }`}>
+              <p className={`text-xs hidden sm:block ${activeMenu === item.id ? 'text-blue-600' : 'text-gray-500'
+                }`}>
                 {item.description}
               </p>
             </div>

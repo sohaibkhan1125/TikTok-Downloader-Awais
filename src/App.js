@@ -14,6 +14,8 @@ import MaintenanceOverlay from './components/MaintenanceOverlay';
 import Login from './pages/admin/Login';
 import Signup from './pages/admin/Signup';
 import Dashboard from './pages/admin/Dashboard';
+import Blogs from './pages/Blogs';
+import BlogDetail from './pages/BlogDetail';
 import SEO from './components/SEO';
 
 // Main TikTok Downloader Component
@@ -87,6 +89,10 @@ function App() {
           <Routes>
             {/* Main TikTok Downloader Routes */}
             <Route path="/" element={<TikTokDownloader />} />
+
+            {/* Blog Routes */}
+            <Route path="/blog" element={<Blogs />} />
+            <Route path="/blog/:slug" element={<BlogDetail />} />
 
             {/* Admin Routes */}
             <Route path="/admin" element={<Navigate to="/admin/login" replace />} />

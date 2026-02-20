@@ -9,7 +9,14 @@ import '@fortawesome/fontawesome-free/css/all.min.css'; // Now available after i
 const EDITOR_KEY = 'quill_editor_content';
 const THEME_KEY = 'editor_theme_preference';
 
-const QuillEditor = () => {
+const QuillEditor = ({
+    initialContent = '',
+    onSave,
+    saving: externalSaving = false,
+    title = 'Professional Editor',
+    showSaveButton = true,
+    storageKey = EDITOR_KEY
+}) => {
     const editorRef = useRef(null);
     const quillRef = useRef(null);
     const [wordCount, setWordCount] = useState(0);
@@ -22,8 +29,10 @@ const QuillEditor = () => {
     const [toastMessage, setToastMessage] = useState('');
     const [showToast, setShowToast] = useState(false);
     const [toastType, setToastType] = useState('success');
-    const [saving, setSaving] = useState(false);
+    const [internalSaving, setInternalSaving] = useState(false);
     const imageInputRef = useRef(null);
+
+    const saving = externalSaving || internalSaving;
 
     const triggerToast = (msg, type = 'success') => {
         setToastMessage(msg);
@@ -51,18 +60,11 @@ const QuillEditor = () => {
 
     const loadContent = useCallback(async () => {
         try {
-            // First load from Supabase as per requirements to sync across devices
-            const { data } = await supabase
-                .from('tiktok_website')
-                .select('content')
-                .eq('id', 1)
-                .single();
-
-            if (data && data.content) {
-                quillRef.current.root.innerHTML = data.content;
+            if (initialContent) {
+                quillRef.current.root.innerHTML = initialContent;
             } else {
-                // Fallback to local storage if needed, or just keep empty
-                const saved = localStorage.getItem(EDITOR_KEY);
+                // Fallback to local storage if needed
+                const saved = localStorage.getItem(storageKey);
                 if (saved) {
                     quillRef.current.root.innerHTML = saved;
                 }
@@ -71,13 +73,13 @@ const QuillEditor = () => {
         } catch (error) {
             console.error('Error loading content:', error);
             // Fallback to local storage
-            const saved = localStorage.getItem(EDITOR_KEY);
+            const saved = localStorage.getItem(storageKey);
             if (saved) {
                 quillRef.current.root.innerHTML = saved;
                 updateStats();
             }
         }
-    }, []);
+    }, [initialContent, storageKey]);
 
     const imageHandler = () => {
         imageInputRef.current.click();
@@ -99,14 +101,14 @@ const QuillEditor = () => {
         }
     };
 
-    const localAutoSave = () => {
+    const localAutoSave = useCallback(() => {
         if (!quillRef.current) return;
         const content = quillRef.current.root.innerHTML;
-        localStorage.setItem(EDITOR_KEY, content);
+        localStorage.setItem(storageKey, content);
         const now = new Date();
         const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         setLastSaved(`Autosaved locally at ${timeString}`);
-    };
+    }, [storageKey]);
 
     useEffect(() => {
         // Init Quill
@@ -161,43 +163,56 @@ const QuillEditor = () => {
         }, 30000);
 
         return () => clearInterval(autoSaveInterval);
-    }, [loadContent]);
+    }, [loadContent, localAutoSave]);
 
-    const saveContent = async () => {
+    // Update content if initialContent changes externally
+    useEffect(() => {
+        if (quillRef.current && initialContent && quillRef.current.root.innerHTML !== initialContent) {
+            quillRef.current.root.innerHTML = initialContent;
+            updateStats();
+        }
+    }, [initialContent]);
+
+    const handleSave = async () => {
         if (!quillRef.current) return;
-        setSaving(true);
         const content = quillRef.current.root.innerHTML;
 
         // Local Save
-        localStorage.setItem(EDITOR_KEY, content);
+        localStorage.setItem(storageKey, content);
 
-        try {
-            // Supabase Save
-            const { error: saveError } = await supabase
-                .from('tiktok_website')
-                .upsert(
-                    { id: 1, content: content, updated_at: new Date().toISOString() },
-                    { onConflict: 'id' }
-                );
-
-            if (saveError) {
-                throw new Error(saveError.message);
-            }
-
-            // Real-time update
-            window.dispatchEvent(new CustomEvent('contentUpdated', {
-                detail: { content: content }
-            }));
-
+        if (onSave) {
+            await onSave(content);
             const now = new Date();
             const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             setLastSaved(`Saved at ${timeString}`);
             triggerToast('Document saved successfully');
-        } catch (error) {
-            console.error('Error saving:', error);
-            triggerToast(`Error saving: ${error.message}`, 'error');
-        } finally {
-            setSaving(false);
+        } else {
+            // Default legacy behavior for homepage content
+            setInternalSaving(true);
+            try {
+                const { error: saveError } = await supabase
+                    .from('tiktok_website')
+                    .upsert(
+                        { id: 1, content: content, updated_at: new Date().toISOString() },
+                        { onConflict: 'id' }
+                    );
+
+                if (saveError) throw new Error(saveError.message);
+
+                window.dispatchEvent(new CustomEvent('contentUpdated', {
+                    detail: { content: content }
+                }));
+
+                const now = new Date();
+                const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                setLastSaved(`Saved at ${timeString}`);
+                triggerToast('Document saved successfully');
+            } catch (error) {
+                console.error('Error saving:', error);
+                triggerToast(`Error saving: ${error.message}`, 'error');
+            } finally {
+                setInternalSaving(false);
+            }
         }
     };
 
@@ -208,8 +223,6 @@ const QuillEditor = () => {
             triggerToast('Editor cleared');
         }
     };
-
-
 
     const toggleTheme = () => {
         const newMode = !isDarkMode;
@@ -223,10 +236,6 @@ const QuillEditor = () => {
         const formatted = formatHTML(html);
         setCodeOutput(formatted);
         setShowCodeModal(true);
-        // Timeout to let DOM update before highlighting
-        setTimeout(() => {
-            // We can use Prism here if we want to highlight inside the modal
-        }, 100);
     };
 
     const formatHTML = (html) => {
@@ -269,7 +278,7 @@ const QuillEditor = () => {
             <header className="quill-header">
                 <div className="quill-logo">
                     <i className="fas fa-pen-nib"></i>
-                    Professional Editor
+                    {title}
                 </div>
                 <div className="quill-header-controls">
                     <button className="quill-btn quill-btn-primary" onClick={convertToCode}>
@@ -285,9 +294,11 @@ const QuillEditor = () => {
                     <button className="quill-btn quill-btn-icon" onClick={clearContent} title="Clear All">
                         <i className="fas fa-trash-alt"></i>
                     </button>
-                    <button className="quill-btn" onClick={saveContent} title="Save Content" disabled={saving}>
-                        <i className="fas fa-save"></i> {saving ? 'Saving...' : 'Save'}
-                    </button>
+                    {showSaveButton && (
+                        <button className="quill-btn" onClick={handleSave} title="Save Content" disabled={saving}>
+                            <i className="fas fa-save"></i> {saving ? 'Saving...' : 'Save'}
+                        </button>
+                    )}
                 </div>
             </header>
 
